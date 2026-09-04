@@ -9,11 +9,13 @@ from Quoridor.constants import (
 class Quoridor:
 	map = [list(x) for x in QUORIDOR_MAP.split('\n')]
 	validPostions = list(range(MAP_UPPER_BOUNDARY)) #[1, 2, 3, 4, 5, 6, 7, 8, 9]
-	playerPositions = ['5A', '5I']
-	playerTargets = ['I', 'A']
+	playerPositions: list[str] = []
+	playerTargets: list[str] = []
 	visitedCells: list[str] = []
 
-	def __init__(self):
+	def __init__(self, playerPositions: list[str], playerTargets: list[str]):
+		self.playerPositions = playerPositions
+		self.playerTargets = playerTargets
 		self.setPlayers()
 
 	def __getCellCoord(self, pos: str):
@@ -132,12 +134,16 @@ class Quoridor:
 			self.playerPositions[player - 1] = newPos
 			
 	def setPlayers(self):
-		coordP1 = self.__getCellCoord(self.playerPositions[0])
-		coordP2 = self.__getCellCoord(self.playerPositions[1])
-		x, y = coordP1
-		self.map[x][y] = COLOR_PAWNS[0]
-		x, y = coordP2
-		self.map[x][y] = COLOR_PAWNS[1]
+		for i in range(len(self.playerPositions)):
+			pos = self.playerPositions[i]
+			x, y = self.__getCellCoord(pos)
+			self.map[x][y] = COLOR_PAWNS[i]
+			
+		# coordP1 = self.__getCellCoord(self.playerPositions[0])
+		# coordP2 = self.__getCellCoord(self.playerPositions[1])
+		# x, y = coordP1
+		# x, y = coordP2
+		# self.map[x][y] = COLOR_PAWNS[1]
 
 	def __str__(self) -> str:
 		strMap = ''
