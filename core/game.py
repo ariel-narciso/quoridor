@@ -12,50 +12,50 @@ from core.constants import (
 
 class Game:
 
-	def __init__(self, playerPositions: list[str], playerTargets: list[str]):
+	def __init__(self, player_positions: list[str], player_targets: list[str]):
 		self.map = [list(x) for x in QUORIDOR_MAP.split('\n')]
-		self.validPostions = list(range(1, MAP_UPPER_BOUNDARY + 1)) #[1, 2, 3, 4, 5, 6, 7, 8, 9]
-		self.playerPositions = playerPositions
-		self.playerTargets = playerTargets
-		self.visitedCells: list[str] = []
-		self.setPlayers()
+		self.valid_postions = list(range(1, MAP_UPPER_BOUNDARY + 1)) #[1, 2, 3, 4, 5, 6, 7, 8, 9]
+		self.player_positions = player_positions
+		self.player_targets = player_targets
+		self.visited_cells: list[str] = []
+		self.set_players()
 
-	def __getCellCoord(self, pos: str):
+	def __get_cell_coord(self, pos: str):
 		x, y = BASE_COORD
-		a, b = self.__getIntCoords(pos)
+		a, b = self.__get_int_coords(pos)
 		a -= 1
 		b += 1
 		return (x + 2 * a, y * b)
 
-	def __getWallCellCoord(self, pos: str):
-		x, y = self.__getCellCoord(pos)
+	def __get_wall_cell_coord(self, pos: str):
+		x, y = self.__get_cell_coord(pos)
 		return (x - 1, y - 2)
 
-	def setBorder(self, pos: str, wallOrientation: WallType):
-		if not self.__validateSetWall(pos, wallOrientation):
+	def set_wall(self, pos: str, wall_orientation: WallType):
+		if not self.__validate_put_wall(pos, wall_orientation):
 			return False
-		x, y = self.__getWallCellCoord(pos)
-		if wallOrientation == WallType.HORIZONTAL:
+		x, y = self.__get_wall_cell_coord(pos)
+		if wall_orientation == WallType.HORIZONTAL:
 			for i in [1, 2, 3, 5, 6, 7]:
 				self.map[x][y + i] = WALL_HORIZONTAL_CHAR
-			if not self.__hasWayOut():
+			if not self.__has_way_out():
 				for i in [1, 2, 3, 5, 6, 7]:
 					self.map[x][y + i] = ORIGINAL_HORIZONTAL_WALL[i - 1 if i <= 3 else i - 5]
 				return False
 			return True
 		# vertical case
 		self.map[x + 1][y] = self.map[x + 3][y] = WALL_VERTICAL_CHAR
-		if not self.__hasWayOut():
+		if not self.__has_way_out():
 			self.map[x + 1][y] = self.map[x + 3][y] = ORIGINAL_VERTICAL_WALL
 			return False
 		return True
 
-	def __validateSetWall(self, pos: str, wallOrientation: WallType):
-		x, y = self.__getIntCoords(pos)
-		if not x in self.validPostions or not (y + 1) in self.validPostions:
+	def __validate_put_wall(self, pos: str, wall_orientation: WallType):
+		x, y = self.__get_int_coords(pos)
+		if not x in self.valid_postions or not (y + 1) in self.valid_postions:
 			return False
-		x, y = self.__getWallCellCoord(pos)
-		if wallOrientation == WallType.HORIZONTAL:
+		x, y = self.__get_wall_cell_coord(pos)
+		if wall_orientation == WallType.HORIZONTAL:
 			if self.map[x][y + 1] == WALL_HORIZONTAL_CHAR or self.map[x][y + 5] == WALL_HORIZONTAL_CHAR:
 				return False
 		# vertical case
@@ -63,89 +63,83 @@ class Game:
 			return False
 		return True
 
-	def __validateMovePlayer(self, player: int, newPos: str):
+	def __validate_move_player(self, player: int, new_pos: str):
 		# TODO: verificar colisão; movimento duplo e diagonal
-		xDestiny, yDestiny = self.__getIntCoords(newPos) 
-		oldPos = self.playerPositions[player - 1]
-		x, y = self.__getIntCoords(oldPos)
-		if not xDestiny in self.validPostions or not (yDestiny + 1) in self.validPostions:
+		x_destiny, y_destiny = self.__get_int_coords(new_pos) 
+		old_pos = self.player_positions[player - 1]
+		x, y = self.__get_int_coords(old_pos)
+		if not x_destiny in self.valid_postions or not (y_destiny + 1) in self.valid_postions:
 			return False
-		diffX = abs(xDestiny - x)
-		diffY = abs(yDestiny - y)
-		if diffX > 1 or diffY > 1 or diffX == diffY:
+		diff_x = abs(x_destiny - x)
+		diff_y = abs(y_destiny - y)
+		if diff_x > 1 or diff_y > 1 or diff_x == diff_y:
 			return False
-		return self.__validadeMoveOnWall(oldPos, newPos)
+		return self.__validade_move_on_wall(old_pos, new_pos)
 
-	def __validadeMoveOnWall(self, oldPos: str, newPos: str):
-		xDestiny, yDestiny = self.__getIntCoords(newPos)
-		x, y = self.__getIntCoords(oldPos)
-		if xDestiny > x:
-			xBorder, yBorder = self.__getWallCellCoord(newPos)
-			return self.map[xBorder][yBorder + 1] != WALL_HORIZONTAL_CHAR
-		if xDestiny < x:
-			xBorder, yBorder = self.__getWallCellCoord(oldPos)
-			return self.map[xBorder][yBorder + 1] != WALL_HORIZONTAL_CHAR
-		if yDestiny > y:
-			xBorder, yBorder = self.__getWallCellCoord(newPos)
-			return self.map[xBorder + 1][yBorder] != WALL_VERTICAL_CHAR
-		if yDestiny < y:
-			xBorder, yBorder = self.__getWallCellCoord(oldPos)
-			return self.map[xBorder + 1][yBorder] != WALL_VERTICAL_CHAR
+	def __validade_move_on_wall(self, oldPos: str, newPos: str):
+		x_destiny, y_destiny = self.__get_int_coords(newPos)
+		x, y = self.__get_int_coords(oldPos)
+		if x_destiny > x:
+			x_wall, y_wall = self.__get_wall_cell_coord(newPos)
+			return self.map[x_wall][y_wall + 1] != WALL_HORIZONTAL_CHAR
+		if x_destiny < x:
+			x_wall, y_wall = self.__get_wall_cell_coord(oldPos)
+			return self.map[x_wall][y_wall + 1] != WALL_HORIZONTAL_CHAR
+		if y_destiny > y:
+			x_wall, y_wall = self.__get_wall_cell_coord(newPos)
+			return self.map[x_wall + 1][y_wall] != WALL_VERTICAL_CHAR
+		if y_destiny < y:
+			x_wall, y_wall = self.__get_wall_cell_coord(oldPos)
+			return self.map[x_wall + 1][y_wall] != WALL_VERTICAL_CHAR
 		return False
 
-	def __getIntCoords(self, pos: str):
+	def __get_int_coords(self, pos: str):
 		return (int(pos[0]), ord(pos[1].upper()) - ord('A'))
 
-	def __hasWayOut(self):
-		for i in range(len(self.playerPositions)):
-			self.visitedCells = []
-			res = self.__dfs(self.playerPositions[i], self.playerTargets[i])
+	def __has_way_out(self):
+		for i in range(len(self.player_positions)):
+			self.visited_cells = []
+			res = self.__dfs(self.player_positions[i], self.player_targets[i])
 			if not res:
 				return False
 		return True
 
-	def __dfs(self, pos: str, finalLine: str):
+	def __dfs(self, pos: str, final_line: str):
 		# TODO: testar 
-		if finalLine in pos:
+		if final_line in pos:
 			return True
-		self.visitedCells.append(pos)
-		x, y = self.__getIntCoords(pos)
-		adjCells: list[str] = []
+		self.visited_cells.append(pos)
+		x, y = self.__get_int_coords(pos)
+		adj_cells: list[str] = []
 		if x > 1:
-			adjCells.append(f'{x - 1}{pos[1]}')
+			adj_cells.append(f'{x - 1}{pos[1]}')
 		if x < MAP_UPPER_BOUNDARY:
-			adjCells.append(f'{x + 1}{pos[1]}')
+			adj_cells.append(f'{x + 1}{pos[1]}')
 		if y > 0:
-			adjCells.append(f'{x}{chr(ord(pos[1]) - 1)}')
+			adj_cells.append(f'{x}{chr(ord(pos[1]) - 1)}')
 		if y < MAP_UPPER_BOUNDARY - 1:
-			adjCells.append(f'{x}{chr(ord(pos[1]) + 1)}')
-		for cell in adjCells:
-			if cell not in self.visitedCells and self.__validadeMoveOnWall(pos, cell):
-				ret = self.__dfs(cell, finalLine)
+			adj_cells.append(f'{x}{chr(ord(pos[1]) + 1)}')
+		for cell in adj_cells:
+			if cell not in self.visited_cells and self.__validade_move_on_wall(pos, cell):
+				ret = self.__dfs(cell, final_line)
 				if ret:
 					return True
 		return False
 
-	def movePlayer(self, player: int, newPos: str):
-		if self.__validateMovePlayer(player, newPos):
-			oldPos = self.playerPositions[player - 1]
-			x, y = self.__getCellCoord(oldPos)
+	def move_player(self, player: int, new_pos: str):
+		if self.__validate_move_player(player, new_pos):
+			old_pos = self.player_positions[player - 1]
+			x, y = self.__get_cell_coord(old_pos)
 			self.map[x][y] = ' '
-			x, y = self.__getCellCoord(newPos)
+			x, y = self.__get_cell_coord(new_pos)
 			self.map[x][y] = COLOR_PAWNS[player - 1]
-			self.playerPositions[player - 1] = newPos
+			self.player_positions[player - 1] = new_pos
 			
-	def setPlayers(self):
-		for i in range(len(self.playerPositions)):
-			pos = self.playerPositions[i]
-			x, y = self.__getCellCoord(pos)
+	def set_players(self):
+		for i in range(len(self.player_positions)):
+			pos = self.player_positions[i]
+			x, y = self.__get_cell_coord(pos)
 			self.map[x][y] = COLOR_PAWNS[i]
-			
-		# coordP1 = self.__getCellCoord(self.playerPositions[0])
-		# coordP2 = self.__getCellCoord(self.playerPositions[1])
-		# x, y = coordP1
-		# x, y = coordP2
-		# self.map[x][y] = COLOR_PAWNS[1]
 
 	def __str__(self) -> str:
 		strMap = ''
