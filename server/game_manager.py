@@ -1,18 +1,17 @@
-from Quoridor.Quoridor import Quoridor
-from Quoridor.constants import Wall
+from core.game import Game, WallType
 from xmlrpc.client import Binary
 
 TOTAL_PLAYERS = 4
 
-class QuoridorServer(Quoridor):
-	nConnectedClients = 0
-	currentClientId = 1
-	news = ['Procurando jogadores ...\n' for _ in range(TOTAL_PLAYERS)]
-	__nWalls = [20 // TOTAL_PLAYERS for _ in range(TOTAL_PLAYERS)]
+class GameManager(Game):
 
 	def __init__(self):
-		super().__init__(['5A', '1E', '5I', '9E'], ['I', '9', 'A', '1'])
+		self.nConnectedClients = 0
+		self.currentClientId = 1
+		self.news = ['Procurando jogadores ...\n' for _ in range(TOTAL_PLAYERS)]
 		self.news[TOTAL_PLAYERS - 1] = ''
+		self.__nWalls = [20 // TOTAL_PLAYERS for _ in range(TOTAL_PLAYERS)]
+		super().__init__(['5A', '1E', '5I', '9E'], ['I', '9', 'A', '1'])
 
 	def startConnection(self):
 		if self.nConnectedClients < TOTAL_PLAYERS:
@@ -38,7 +37,7 @@ class QuoridorServer(Quoridor):
 	def putWall(self, clientId: int, pos: str, orientation: int):
 		if self.currentClientId != clientId or self.__nWalls[clientId -1] == 0:
 			return False
-		if not self.setBorder(pos, Wall.vertical if orientation == 1 else Wall.horizontal):
+		if not self.setBorder(pos, WallType.VERTICAL if orientation == 1 else WallType.HORIZONTAL):
 			return False
 		self.__nWalls[clientId - 1] -= 1
 		nextPlayer = clientId % TOTAL_PLAYERS + 1
@@ -65,5 +64,5 @@ class QuoridorServer(Quoridor):
 	# 			if self.__isWinner():
 	# 				self.news[clientId] = self.news[nextClient] = ''
 
-	def __isWinner(self):
-		return False
+	# def __isWinner(self):
+	# 	return False

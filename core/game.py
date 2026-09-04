@@ -1,21 +1,23 @@
-from Quoridor.constants import (
+from core.constants import (
 	QUORIDOR_MAP,
-	BASE_COORD,
 	MAP_UPPER_BOUNDARY,
+	BASE_COORD,
 	COLOR_PAWNS,
-	Wall, ORIGINAL_HORIZONTAL_WALL, ORIGINAL_VERTICAL_WALL
+	WALL_HORIZONTAL_CHAR,
+	WALL_VERTICAL_CHAR,
+	ORIGINAL_HORIZONTAL_WALL,
+	ORIGINAL_VERTICAL_WALL,
+	WallType,
 )
 
-class Quoridor:
-	map = [list(x) for x in QUORIDOR_MAP.split('\n')]
-	validPostions = list(range(MAP_UPPER_BOUNDARY)) #[1, 2, 3, 4, 5, 6, 7, 8, 9]
-	playerPositions: list[str] = []
-	playerTargets: list[str] = []
-	visitedCells: list[str] = []
+class Game:
 
 	def __init__(self, playerPositions: list[str], playerTargets: list[str]):
+		self.map = [list(x) for x in QUORIDOR_MAP.split('\n')]
+		self.validPostions = list(range(1, MAP_UPPER_BOUNDARY + 1)) #[1, 2, 3, 4, 5, 6, 7, 8, 9]
 		self.playerPositions = playerPositions
 		self.playerTargets = playerTargets
+		self.visitedCells: list[str] = []
 		self.setPlayers()
 
 	def __getCellCoord(self, pos: str):
@@ -29,35 +31,35 @@ class Quoridor:
 		x, y = self.__getCellCoord(pos)
 		return (x - 1, y - 2)
 
-	def setBorder(self, pos: str, wallOrientation: Wall):
+	def setBorder(self, pos: str, wallOrientation: WallType):
 		if not self.__validateSetWall(pos, wallOrientation):
 			return False
 		x, y = self.__getWallCellCoord(pos)
-		if wallOrientation == Wall.horizontal:
+		if wallOrientation == WallType.HORIZONTAL:
 			for i in [1, 2, 3, 5, 6, 7]:
-				self.map[x][y + i] = Wall.horizontalChar.value
+				self.map[x][y + i] = WALL_HORIZONTAL_CHAR
 			if not self.__hasWayOut():
 				for i in [1, 2, 3, 5, 6, 7]:
 					self.map[x][y + i] = ORIGINAL_HORIZONTAL_WALL[i - 1 if i <= 3 else i - 5]
 				return False
 			return True
 		# vertical case
-		self.map[x + 1][y] = self.map[x + 3][y] = Wall.verticalChar.value
+		self.map[x + 1][y] = self.map[x + 3][y] = WALL_VERTICAL_CHAR
 		if not self.__hasWayOut():
 			self.map[x + 1][y] = self.map[x + 3][y] = ORIGINAL_VERTICAL_WALL
 			return False
 		return True
 
-	def __validateSetWall(self, pos: str, wallOrientation: Wall):
+	def __validateSetWall(self, pos: str, wallOrientation: WallType):
 		x, y = self.__getIntCoords(pos)
 		if not x in self.validPostions or not (y + 1) in self.validPostions:
 			return False
 		x, y = self.__getWallCellCoord(pos)
-		if wallOrientation == Wall.horizontal:
-			if self.map[x][y + 1] == Wall.horizontalChar.value or self.map[x][y + 5] == Wall.horizontalChar.value:
+		if wallOrientation == WallType.HORIZONTAL:
+			if self.map[x][y + 1] == WALL_HORIZONTAL_CHAR or self.map[x][y + 5] == WALL_HORIZONTAL_CHAR:
 				return False
 		# vertical case
-		elif self.map[x + 1][y] == Wall.verticalChar.value or self.map[x + 3][y] == Wall.verticalChar.value:
+		elif self.map[x + 1][y] == WALL_VERTICAL_CHAR or self.map[x + 3][y] == WALL_VERTICAL_CHAR:
 			return False
 		return True
 
@@ -79,16 +81,16 @@ class Quoridor:
 		x, y = self.__getIntCoords(oldPos)
 		if xDestiny > x:
 			xBorder, yBorder = self.__getWallCellCoord(newPos)
-			return self.map[xBorder][yBorder + 1] != Wall.horizontalChar.value
+			return self.map[xBorder][yBorder + 1] != WALL_HORIZONTAL_CHAR
 		if xDestiny < x:
 			xBorder, yBorder = self.__getWallCellCoord(oldPos)
-			return self.map[xBorder][yBorder + 1] != Wall.horizontalChar.value
+			return self.map[xBorder][yBorder + 1] != WALL_HORIZONTAL_CHAR
 		if yDestiny > y:
 			xBorder, yBorder = self.__getWallCellCoord(newPos)
-			return self.map[xBorder + 1][yBorder] != Wall.verticalChar.value
+			return self.map[xBorder + 1][yBorder] != WALL_VERTICAL_CHAR
 		if yDestiny < y:
 			xBorder, yBorder = self.__getWallCellCoord(oldPos)
-			return self.map[xBorder + 1][yBorder] != Wall.verticalChar.value
+			return self.map[xBorder + 1][yBorder] != WALL_VERTICAL_CHAR
 		return False
 
 	def __getIntCoords(self, pos: str):
@@ -96,8 +98,8 @@ class Quoridor:
 
 	def __hasWayOut(self):
 		for i in range(len(self.playerPositions)):
-			res = self.__dfs(self.playerPositions[i], self.playerTargets[i])
 			self.visitedCells = []
+			res = self.__dfs(self.playerPositions[i], self.playerTargets[i])
 			if not res:
 				return False
 		return True

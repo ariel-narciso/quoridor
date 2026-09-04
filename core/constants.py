@@ -37,8 +37,9 @@ COLOR_PAWNS = [
 ORIGINAL_HORIZONTAL_WALL = ' ┄ '
 ORIGINAL_VERTICAL_WALL = '┊'
 
-class Wall(Enum):
-  vertical = 1
-  horizontal = 2
-  horizontalChar = '━'
-  verticalChar = '┃'
+WALL_HORIZONTAL_CHAR = '━'
+WALL_VERTICAL_CHAR = '┃'
+
+class WallType(Enum):
+  VERTICAL = 1
+  HORIZONTAL = 2
