@@ -11,7 +11,8 @@ class GameManager(Game):
 		self.news = ['Procurando jogadores ...\n' for _ in range(TOTAL_PLAYERS)]
 		self.news[TOTAL_PLAYERS - 1] = ''
 		self.__n_walls = [20 // TOTAL_PLAYERS for _ in range(TOTAL_PLAYERS)]
-		super().__init__(['5A', '1E', '5I', '9E'], ['I', '9', 'A', '1'])
+		self.has_winner = False
+		super().__init__(['5A', '1E', '5I', '9E'], ['D', '9', 'A', '1'])
 
 	def start_connection(self):
 		if self.n_connected_clients < TOTAL_PLAYERS:
@@ -29,7 +30,10 @@ class GameManager(Game):
 		self.news[client_id - 1] = ''
 		if self.n_connected_clients < TOTAL_PLAYERS:
 			return (False, Binary(news.encode()))
-		return (self.current_client_id == client_id, Binary(news.encode()))
+		return (
+			self.current_client_id == client_id and not self.has_winner,
+			Binary(news.encode())
+		)
 
 	def get_n_walls(self, client_id: int):
 		return self.__n_walls[client_id - 1]
@@ -51,21 +55,27 @@ class GameManager(Game):
 		self.current_client_id = next_player
 		return True
 
-	def move_pawn(self, client_id: int):
-		pass
-
-	# def movePawn(self, clientId: int);
-	# 	if self.__isWinner():
-	# 				mess = f'Jogador {clientId} venceu o jogo!'
-	# 			else:
-	# 				mess = f'Vez do jogador {nextClient}'
-	# 			for i in range(TOTAL_PLAYERS):
-	# 				self.news[i] = (
-	# 					f'Jogador {clientId} colocou uma barreira em {pos}' +
-	# 					f'\n{self.__str__()}\n{mess}'
-	# 				)
-	# 			if self.__isWinner():
-	# 				self.news[clientId] = self.news[nextClient] = ''
+	def move_pawn(self, client_id: int, pos: str):
+		pos = pos.upper()
+		if (self.current_client_id != client_id):
+			return False
+		if not self.move_player(client_id, pos):
+			return False
+		next_player = client_id % TOTAL_PLAYERS + 1
+		winner = self.player_targets[client_id - 1] in pos
+		for i in range(TOTAL_PLAYERS):
+			self.news[i] = (
+				f'Player {client_id} se moveu para {pos}\n'
+				f'{super().__str__()}'
+			)
+			if i != next_player - 1 and not winner:
+				self.news[i] += f'Aguardando lance do Player {next_player}\n'
+		if winner:
+			self.has_winner = True
+			for i in range(TOTAL_PLAYERS):
+				self.news[i] += f'Player {client_id} venceu o jogo!\n'
+		self.current_client_id = next_player
+		return True
 
 	# def __isWinner(self):
 	# 	return False
