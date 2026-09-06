@@ -32,6 +32,7 @@ class Game:
 		return (x - 1, y - 2)
 
 	def set_wall(self, pos: str, wall_orientation: WallType):
+		pos = pos.upper()
 		if not self.__validate_put_wall(pos, wall_orientation):
 			return False
 		x, y = self.__get_wall_cell_coord(pos)
@@ -94,7 +95,7 @@ class Game:
 		return False
 
 	def __get_int_coords(self, pos: str):
-		return (int(pos[0]), ord(pos[1].upper()) - ord('A'))
+		return (int(pos[0]), ord(pos[1]) - ord('A'))
 
 	def __has_way_out(self):
 		for i in range(len(self.player_positions)):
@@ -127,6 +128,7 @@ class Game:
 		return False
 
 	def move_player(self, player: int, new_pos: str):
+		new_pos = new_pos.upper()
 		if self.__validate_move_player(player, new_pos):
 			old_pos = self.player_positions[player - 1]
 			x, y = self.__get_cell_coord(old_pos)
@@ -134,6 +136,8 @@ class Game:
 			x, y = self.__get_cell_coord(new_pos)
 			self.map[x][y] = COLOR_PAWNS[player - 1]
 			self.player_positions[player - 1] = new_pos
+			return True
+		return False
 			
 	def set_players(self):
 		for i in range(len(self.player_positions)):
