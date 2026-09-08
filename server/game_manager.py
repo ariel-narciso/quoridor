@@ -12,7 +12,7 @@ class GameManager(Game):
 		self.news[TOTAL_PLAYERS - 1] = ''
 		self.__n_walls = [20 // TOTAL_PLAYERS for _ in range(TOTAL_PLAYERS)]
 		self.has_winner = False
-		super().__init__(['5A', '1E', '5I', '9E'], ['D', '9', 'A', '1'])
+		super().__init__(['5A', '1E', '5I', '9E'], ['I', '9', 'A', '1'])
 
 	def start_connection(self):
 		if self.n_connected_clients < TOTAL_PLAYERS:
