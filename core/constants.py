@@ -41,5 +41,5 @@ WALL_HORIZONTAL_CHAR = '━'
 WALL_VERTICAL_CHAR = '┃'
 
 class WallType(Enum):
-  VERTICAL = 1
-  HORIZONTAL = 2
+  VERTICAL = 'vertical'
+  HORIZONTAL = 'horizontal'
