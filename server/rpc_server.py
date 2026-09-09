@@ -7,7 +7,7 @@ class RequestHandler(SimpleXMLRPCRequestHandler):
 def start_server(host: str = 'localhost', port: int = 8000):
   print(f'Servidor Quoridor rodando em http://{host}:{port}')
   with SimpleXMLRPCServer(
-    (host, port), RequestHandler, logRequests=False
+    (host, port), RequestHandler, logRequests=False, allow_none=True
   ) as server:
     server.register_introspection_functions()
     game_manager = GameManager()
