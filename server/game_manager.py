@@ -84,17 +84,15 @@ class GameManager(Game):
 			return False
 		next_player = client_id % TOTAL_PLAYERS + 1
 		self.has_winner = self.player_targets[client_id - 1] in pos
-		self.broadcast_event({
+		event: GameNews = {
 			'event_type': EventType.PAWN_MOVED.value,
 			'player': client_id,
 			'position': pos,
 			'next_player': next_player,
-			'winner': client_id if self.has_winner else None,
 			'board': Binary(super().__str__().encode())
-		})
-		# if winner:
-		# 	self.has_winner = True
-		# 	for i in range(TOTAL_PLAYERS):
-		# 		self.news[i] += f'Player {client_id} venceu o jogo!\n'
+		}
+		if self.has_winner:
+			event['winner'] = client_id
+		self.broadcast_event(event)
 		self.current_client_id = next_player
 		return True

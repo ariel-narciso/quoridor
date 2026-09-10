@@ -17,7 +17,7 @@ class GameNews(TypedDict, total=False):
   message: str
   board: Binary
   next_player: int
-  winner: int | None
+  winner: int
 
 class GameState(TypedDict):
   is_my_turn: bool
