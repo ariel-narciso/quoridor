@@ -7,6 +7,7 @@ from core.board import (
 	WALL_VERTICAL_CHAR,
 	ORIGINAL_HORIZONTAL_WALL,
 	ORIGINAL_VERTICAL_WALL,
+	EMPTY_POSITION,
 )
 
 from core.models import WallType
@@ -76,6 +77,9 @@ class Game:
 		diff_y = abs(y_destiny - y)
 		if diff_x > 1 or diff_y > 1 or diff_x == diff_y:
 			return False
+		x, y = self.__get_cell_coord(new_pos)
+		if self.map[x][y] != EMPTY_POSITION: # colisão
+			return False
 		return self.__validade_move_on_wall(old_pos, new_pos)
 
 	def __validade_move_on_wall(self, oldPos: str, newPos: str):
@@ -133,7 +137,7 @@ class Game:
 		if self.__validate_move_player(player, new_pos):
 			old_pos = self.player_positions[player - 1]
 			x, y = self.__get_cell_coord(old_pos)
-			self.map[x][y] = ' '
+			self.map[x][y] = EMPTY_POSITION
 			x, y = self.__get_cell_coord(new_pos)
 			self.map[x][y] = COLOR_PAWNS[player - 1]
 			self.player_positions[player - 1] = new_pos
