@@ -1,8 +1,7 @@
 from time import sleep
 from typing import cast
 from xmlrpc.client import ServerProxy
-from core.models import EventType, GameState
-from core.constants import WallType
+from core.models import EventType, GameState, WallType
 
 def start_client(host: str = 'localhost', port: int = 8000):
   print('Conectando ao Servidor Quoridor ...')

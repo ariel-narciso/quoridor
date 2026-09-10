@@ -1,5 +1,3 @@
-from enum import Enum
-
 QUORIDOR_MAP = """
     A   B   C   D   E   F   G   H   I
   +━━━+━━━+━━━+━━━+━━━+━━━+━━━+━━━+━━━+
@@ -39,7 +37,3 @@ ORIGINAL_VERTICAL_WALL = '┊'
 
 WALL_HORIZONTAL_CHAR = '━'
 WALL_VERTICAL_CHAR = '┃'
-
-class WallType(Enum):
-  VERTICAL = 'vertical'
-  HORIZONTAL = 'horizontal'

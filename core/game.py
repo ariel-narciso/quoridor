@@ -1,4 +1,4 @@
-from core.constants import (
+from core.board import (
 	QUORIDOR_MAP,
 	MAP_UPPER_BOUNDARY,
 	BASE_COORD,
@@ -7,8 +7,9 @@ from core.constants import (
 	WALL_VERTICAL_CHAR,
 	ORIGINAL_HORIZONTAL_WALL,
 	ORIGINAL_VERTICAL_WALL,
-	WallType,
 )
+
+from core.models import WallType
 
 class Game:
 

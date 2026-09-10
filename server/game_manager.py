@@ -1,5 +1,5 @@
-from core.game import Game, WallType
-from core.models import EventType, GameNews, GameState, Binary
+from core.game import Game
+from core.models import WallType, EventType, GameNews, GameState, Binary
 
 TOTAL_PLAYERS = 4
 

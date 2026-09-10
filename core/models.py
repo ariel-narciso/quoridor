@@ -3,6 +3,10 @@ from xmlrpc.client import Binary
 from typing import TypedDict, Required
 from enum import Enum
 
+class WallType(Enum):
+  VERTICAL = 'vertical'
+  HORIZONTAL = 'horizontal'
+
 class EventType(Enum):
 	WAITING = 1
 	GAME_START = 2
@@ -23,4 +27,3 @@ class GameState(TypedDict):
   is_my_turn: bool
   events: list[GameNews]
   game_over: bool
-
