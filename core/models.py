@@ -3,6 +3,8 @@ from xmlrpc.client import Binary
 from typing import TypedDict, Required
 from enum import Enum
 
+type Point = tuple[int,int]
+
 class WallType(Enum):
   VERTICAL = 'vertical'
   HORIZONTAL = 'horizontal'

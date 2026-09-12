@@ -1,5 +1,5 @@
 import pytest
-from core.game import Game
+from core.game import Game, Point
 
 class TestGamePosition:
 
@@ -14,7 +14,7 @@ class TestGamePosition:
     ('9I', (8, 8)),
     ('5E', (4, 4)),
   ])
-  def test_valid_positions(self, validator: Game, input: str, expected_output: tuple[int,int]):
+  def test_valid_positions(self, validator: Game, input: str, expected_output: Point):
     ret = validator.convert_position(input)
     assert ret == expected_output
 
