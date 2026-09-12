@@ -45,7 +45,4 @@ class Game:
       self.v_walls[x][y] = self.v_walls[x + 1][y] = True
     return True
 
-    #   self.v_walls[x][y] = True
-
-  # IndexError
   
