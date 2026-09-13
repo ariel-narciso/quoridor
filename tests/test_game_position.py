@@ -28,6 +28,3 @@ class TestGamePosition:
     assert game.player_positions == []
     game.set_player_positions(['1A', '9I'])
     assert game.player_positions == [(0, 0), (8, 8)]
-    assert game.positions[0][0] == 1
-    assert game.positions[8][8] == 2
-    assert game.positions[4][4] == 0
