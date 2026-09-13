@@ -1,5 +1,5 @@
 from core.board import (
-	MAP_SIZE,
+  MAP_SIZE,
 )
 
 from core.models import WallType, Point
@@ -91,18 +91,63 @@ class Game:
   def move_pawn(self, player_id: int, pos: str):
     new_x, new_y = self.convert_position(pos)
     current_x, current_y = self.player_positions[player_id - 1]
-    if abs(new_x - current_x) + abs(new_y - current_y) != 1:
-      raise ValueError('Movimento inválido')
     if (new_x, new_y) in self.player_positions:
       raise ValueError('A posição de destino deve estar vazia')
+    if abs(new_x - current_x) + abs(new_y - current_y) == 2:
+      if self.__double_jump(player_id, pos):
+        return True
+    if abs(new_x - current_x) + abs(new_y - current_y) != 1:
+      raise ValueError('Movimento inválido')
     adj_positions = self.get_adj_positions((current_x, current_y))
     if not (new_x, new_y) in adj_positions:
       raise ValueError('O peão não pode pular barreira')
     self.player_positions[player_id - 1] = (new_x, new_y)
     return True
 
-  def __double_jump():
-    pass
+  def __double_jump(self, player_id: int, pos: str):
+    new_x, new_y = self.convert_position(pos)
+    current_x, current_y = self.player_positions[player_id - 1]
+    if abs(new_x - current_x) == 1 or abs(new_y - current_y) == 1:
+      return self.__diagonal_jump()
+    is_double_jump = (
+      self.__v_double_jump(current_x, current_y, new_x) or
+      self.__h_double_jump(current_x, current_y, new_y)
+    )
+    if is_double_jump:
+      self.player_positions[player_id - 1] = (new_x, new_y)
+    return is_double_jump
 
-  def __diagonal_jump():
-    pass
+  def __v_double_jump(self, current_x: int, current_y: int, new_x: int):
+    if new_x == current_x + 2:
+      return (
+        (current_x + 1, current_y) in self.player_positions and
+        not self.h_walls[current_x + 1][current_y] and
+        not self.h_walls[current_x + 2][current_y]
+      )
+    if new_x == current_x - 2:
+      return (
+        (current_x - 1, current_y) in self.player_positions and
+        (
+          not self.h_walls[current_x][current_y] and
+          not self.h_walls[current_x - 1][current_y]
+        )
+      )
+    return False
+
+  def __h_double_jump(self, current_x: int, current_y: int, new_y: int):
+    if new_y == current_y + 2:
+      return (
+        (current_x, current_y + 1) in self.player_positions and
+        not self.v_walls[current_x][current_y + 1] and
+        not self.v_walls[current_x][current_y + 2]
+      )
+    if new_y == current_y - 2:
+      return (
+        (current_x, current_y - 1) in self.player_positions and
+        not self.v_walls[current_x][current_y] and
+        not self.v_walls[current_x][current_y - 1]
+      )
+    return False
+
+  def __diagonal_jump(self):
+    return False
