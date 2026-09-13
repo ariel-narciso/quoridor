@@ -9,7 +9,6 @@ class Game:
   def __init__(self, player_positions: list[str], player_targets: list[str]):
     self.v_walls: list[list[bool]] = [[i == 0 for i in range(MAP_SIZE)] for _ in range(MAP_SIZE)]
     self.h_walls: list[list[bool]] = [[i == 0 for _ in range(MAP_SIZE)] for i in range(MAP_SIZE)]
-    self.positions: list[list[int]] = [[0 for _ in range(MAP_SIZE)] for _ in range(MAP_SIZE)]
     self.player_positions: list[Point] = []
     self.player_targets: list[str] = player_targets
     self.__visited_positions_dfs: list[Point] = []
@@ -28,7 +27,6 @@ class Game:
     for pos in player_positions:
       x, y = self.convert_position(pos)
       self.player_positions.append((x, y))
-      self.positions[x][y] = player_id
       player_id += 1
 
   def set_wall(self, pos: str, wall_type: WallType):
@@ -89,3 +87,22 @@ class Game:
     if y < MAP_SIZE - 1 and not self.v_walls[x][y + 1]:
       adj_positions.append((x, y + 1))
     return adj_positions
+
+  def move_pawn(self, player_id: int, pos: str):
+    new_x, new_y = self.convert_position(pos)
+    current_x, current_y = self.player_positions[player_id - 1]
+    if abs(new_x - current_x) + abs(new_y - current_y) != 1:
+      raise ValueError('Movimento inválido')
+    if (new_x, new_y) in self.player_positions:
+      raise ValueError('A posição de destino deve estar vazia')
+    adj_positions = self.get_adj_positions((current_x, current_y))
+    if not (new_x, new_y) in adj_positions:
+      raise ValueError('O peão não pode pular barreira')
+    self.player_positions[player_id - 1] = (new_x, new_y)
+    return True
+
+  def __double_jump():
+    pass
+
+  def __diagonal_jump():
+    pass
