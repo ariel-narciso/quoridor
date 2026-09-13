@@ -37,7 +37,16 @@ class TestGameMovePawn:
   @pytest.mark.parametrize('player_id, pos', [
     (1, '4E'), (1, '6E'), (1, '5F'),
     (2, '5E'), (3, '5E'), (4, '5E'),
+    (2, '6E'), (4, '4E'),
   ])
   def test_invalid_move_pawn_filled_position(self, pawns_together_scenario: Game, player_id: int, pos: str):
     with pytest.raises(ValueError):
       pawns_together_scenario.move_pawn(player_id, pos)
+
+  @pytest.mark.parametrize('player_id, pos', [
+    (1, '3E'), (1, '5G'), (3, '5D')
+  ])
+  def test_valid_move_pawn_double_jump(self, pawns_together_scenario: Game, player_id: int, pos: str):
+    assert pawns_together_scenario.move_pawn(player_id, pos)
+    x, y = pawns_together_scenario.convert_position(pos)
+    assert pawns_together_scenario.player_positions[player_id - 1] == (x, y)
