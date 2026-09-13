@@ -1,6 +1,5 @@
 import pytest
-from core.game import Game
-from core.models import WallType
+from core.game import Game, WallType
 
 class TestGameWall:
 
