@@ -23,6 +23,13 @@ class TestGameWallDFS():
 	def test_invalid_set_wall_dfs(self, walls_scenario: Game, pos: str, wall_type: WallType):
 		with pytest.raises(ValueError):
 			walls_scenario.set_wall(pos, wall_type)
+		x, y = walls_scenario.convert_position(pos)
+		if wall_type == WallType.HORIZONTAL:
+			assert not walls_scenario.h_walls[x][y]
+			assert not walls_scenario.h_walls[x][y + 1]
+		else:
+			assert not walls_scenario.v_walls[x][y]
+			assert not walls_scenario.v_walls[x + 1][y]
 
 	@pytest.mark.parametrize('pos, wall_type', [
 		('4C', WallType.VERTICAL),
@@ -33,3 +40,10 @@ class TestGameWallDFS():
 	def test_valid_set_wall_dfs(self, walls_scenario: Game, pos: str, wall_type: WallType):
 		ret = walls_scenario.set_wall(pos, wall_type)
 		assert ret
+		x, y = walls_scenario.convert_position(pos)
+		if wall_type == WallType.HORIZONTAL:
+			assert walls_scenario.h_walls[x][y]
+			assert walls_scenario.h_walls[x][y + 1]
+		else:
+			assert walls_scenario.v_walls[x][y]
+			assert walls_scenario.v_walls[x + 1][y]

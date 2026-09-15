@@ -45,6 +45,10 @@ class Game:
       self.v_walls[x][y] = self.v_walls[x + 1][y] = True
     ok, player_id = self.__has_way_out()
     if not ok:
+      if wall_type == WallType.HORIZONTAL:
+        self.h_walls[x][y] = self.h_walls[x][y + 1] = False
+      else:
+        self.v_walls[x][y] = self.v_walls[x + 1][y] = False
       raise ValueError(
         f'Colocar barreira {wall_type.value} em {pos} '
         f'deixa o jogador {player_id + 1} sem saída'
