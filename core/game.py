@@ -97,10 +97,12 @@ class Game:
     current_x, current_y = self.player_positions[player_id - 1]
     if (new_x, new_y) in self.player_positions:
       raise ValueError('A posição de destino deve estar vazia')
-    if abs(new_x - current_x) + abs(new_y - current_y) == 2:
+    manhatan_distance = abs(new_x - current_x) + abs(new_y - current_y)
+    if manhatan_distance == 2:
       if self.__double_jump(player_id, pos):
         return True
-    if abs(new_x - current_x) + abs(new_y - current_y) != 1:
+      raise ValueError('Pulo duplo inválido')
+    if manhatan_distance != 1:
       raise ValueError('Movimento inválido')
     adj_positions = self.get_adj_positions((current_x, current_y))
     if not (new_x, new_y) in adj_positions:
