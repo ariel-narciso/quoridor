@@ -7,8 +7,8 @@ from core.models import WallType, Point
 class Game:
 
   def __init__(self, player_positions: list[str], player_targets: list[str]):
-    self.v_walls: list[list[bool]] = [[i == 0 for i in range(MAP_SIZE)] for _ in range(MAP_SIZE)]
-    self.h_walls: list[list[bool]] = [[i == 0 for _ in range(MAP_SIZE)] for i in range(MAP_SIZE)]
+    self.v_walls: list[list[bool]] = [[i in [0, MAP_SIZE] for i in range(MAP_SIZE + 1)] for _ in range(MAP_SIZE)]
+    self.h_walls: list[list[bool]] = [[i in [0, MAP_SIZE] for _ in range(MAP_SIZE)] for i in range(MAP_SIZE + 1)]
     self.player_positions: list[Point] = []
     self.player_targets: list[str] = player_targets
     self.__visited_positions_dfs: list[Point] = []
@@ -99,9 +99,7 @@ class Game:
       raise ValueError('A posição de destino deve estar vazia')
     manhatan_distance = abs(new_x - current_x) + abs(new_y - current_y)
     if manhatan_distance == 2:
-      if self.__double_jump(player_id, pos):
-        return True
-      raise ValueError('Pulo duplo inválido')
+      return self.__double_jump(player_id, pos)
     if manhatan_distance != 1:
       raise ValueError('Movimento inválido')
     adj_positions = self.get_adj_positions((current_x, current_y))
@@ -113,15 +111,17 @@ class Game:
   def __double_jump(self, player_id: int, pos: str):
     new_x, new_y = self.convert_position(pos)
     current_x, current_y = self.player_positions[player_id - 1]
-    if abs(new_x - current_x) == 1 or abs(new_y - current_y) == 1:
-      return self.__diagonal_jump()
-    is_double_jump = (
-      self.__v_double_jump(current_x, current_y, new_x) or
-      self.__h_double_jump(current_x, current_y, new_y)
-    )
-    if is_double_jump:
+    if abs(new_x - current_x) == 1:
+      ok = self.__diagonal_jump(current_x, current_y, new_x, new_y)
+    else:
+      ok = (
+        self.__v_double_jump(current_x, current_y, new_x) or
+        self.__h_double_jump(current_x, current_y, new_y)
+      )
+    if ok:
       self.player_positions[player_id - 1] = (new_x, new_y)
-    return is_double_jump
+      return True
+    raise ValueError('Movimento duplo inválido')
 
   def __v_double_jump(self, current_x: int, current_y: int, new_x: int):
     if new_x == current_x + 2:
@@ -155,5 +155,59 @@ class Game:
       )
     return False
 
-  def __diagonal_jump(self):
+  def __diagonal_jump(self, current_x: int, current_y: int, new_x: int, new_y: int):
+    first_top_path, first_bottom_path, first_rigth_path, first_left_path = (
+      self._get_diagonal_first_paths(current_x, current_y, new_x, new_y)
+    )
+    if new_x == current_x + 1:
+      if new_y == current_y + 1: # inferior direito
+        if first_bottom_path and not self.v_walls[new_x][new_y]:
+          return True
+        if first_rigth_path and not self.h_walls[new_x][new_y]:
+          return True
+      else: # inferior esquerdo
+        if first_bottom_path and not self.v_walls[new_x][current_y]:
+          return True
+        if first_left_path and not self.h_walls[new_x][new_y]:
+          return True
+    else:
+      if new_y == current_y + 1: # superior direito
+        if first_top_path and not self.v_walls[new_x][new_y]:
+          return True
+        if first_rigth_path and not self.h_walls[current_x][new_y]:
+          return True
+      else: # superior esquerdo
+        if first_top_path and not self.v_walls[new_x][current_y]:
+          return  True
+        if first_left_path and not self.h_walls[current_x][new_y]:
+          return True
     return False
+
+  def _get_diagonal_first_paths(self, current_x: int, current_y: int, new_x: int, new_y: int):
+    return [
+      # first_top_path
+      (
+        not self.h_walls[current_x][current_y] and
+        (new_x, current_y) in self.player_positions and
+        self.h_walls[new_x][current_y]
+        #TODO Não necessariamente precisa haver uma parede (pode ser um peão na proxima casa)
+      ),
+      # first_bottom_path
+      (
+        not self.h_walls[new_x][current_y] and
+        (new_x, current_y) in self.player_positions and
+        self.h_walls[new_x + 1][current_y]
+      ),
+      # first_rigth_path
+      (
+        not self.v_walls[current_x][new_y] and
+        (current_x, new_y) in self.player_positions and
+        self.v_walls[current_x][new_y + 1]
+      ),
+      # first_left_path
+      (
+        not self.v_walls[current_x][current_y] and
+        (current_x, new_y) in self.player_positions and
+        self.v_walls[current_x][new_y]
+      )
+    ]
