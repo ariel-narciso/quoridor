@@ -1,7 +1,7 @@
 import pytest
 from core.game import Game, Point
 
-class TestGamePosition:
+class TestPosition:
 
   @pytest.fixture
   def validator(self):

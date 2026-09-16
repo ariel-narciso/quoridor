@@ -1,7 +1,7 @@
 import pytest
 from core.game import Game, WallType, Point
 
-class TestGameWallDFS():
+class TestSetWallDFS():
 
 	@pytest.mark.parametrize('pos, expected_output', [
 		((4, 0), [(5, 0), (4, 1)]),

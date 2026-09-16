@@ -1,7 +1,7 @@
 import pytest
 from core.game import Game, WallType
 
-class TestGameWall:
+class TestSetWall:
 
   @pytest.fixture
   def validator(self):

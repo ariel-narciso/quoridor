@@ -1,7 +1,7 @@
 import pytest
 from core.game import Game, WallType
 
-class TestGameMovePawn:
+class TestMovePawn:
   @pytest.fixture
   def validator(self):
     return Game(['5A', '1E', '5I', '9E'], ['I', '9', 'A', '1'])
