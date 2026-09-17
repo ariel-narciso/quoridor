@@ -1,221 +1,240 @@
 from core.board import (
-	QUORIDOR_MAP,
-	MAP_UPPER_BOUNDARY,
-	BASE_COORD,
-	COLOR_PAWNS,
-	WALL_HORIZONTAL_CHAR,
-	WALL_VERTICAL_CHAR,
+	MAP_SIZE,
 	ORIGINAL_HORIZONTAL_WALL,
 	ORIGINAL_VERTICAL_WALL,
-	EMPTY_POSITION,
+	WALL_HORIZONTAL_CHAR,
+	WALL_VERTICAL_CHAR,
+	COLOR_PAWNS
 )
 
-from core.models import WallType
+from core.models import WallType, Point
 
 class Game:
 
 	def __init__(self, player_positions: list[str], player_targets: list[str]):
-		self.map = [list(x) for x in QUORIDOR_MAP.split('\n')]
-		self.valid_positions = list(range(1, MAP_UPPER_BOUNDARY + 1)) #[1, 2, 3, 4, 5, 6, 7, 8, 9]
-		self.player_positions = player_positions
-		self.player_targets = player_targets
-		self.visited_cells: list[str] = []
-		self.set_players()
+		self.v_walls: list[list[bool]] = [[i in [0, MAP_SIZE] for i in range(MAP_SIZE + 1)] for _ in range(MAP_SIZE)]
+		self.h_walls: list[list[bool]] = [[i in [0, MAP_SIZE] for _ in range(MAP_SIZE)] for i in range(MAP_SIZE + 1)]
+		self.player_positions: list[Point] = []
+		self.player_targets: list[str] = player_targets
+		self.__visited_positions_dfs: list[Point] = []
+		self.set_player_positions(player_positions)
 
-	def __get_cell_coord(self, pos: str):
-		x, y = BASE_COORD
-		a, b = self.__get_int_coords(pos)
-		a -= 1
-		b += 1
-		return (x + 2 * a, y * b)
+	def convert_position(self, pos: str):
+		if len(pos) != 2:
+			raise ValueError('Formato de coordenada inválido')
+		x, y = [int(pos[0]), ord(pos[1]) - ord('A')]
+		if x == 0 or y < 0 or y >= MAP_SIZE:
+			raise ValueError('Coordenada fora dos limites do mapa')
+		return (x - 1, y)
 
-	def __get_wall_cell_coord(self, pos: str):
-		x, y = self.__get_cell_coord(pos)
-		return (x - 1, y - 2)
+	def set_player_positions(self, player_positions: list[str]):
+		player_id = 1
+		for pos in player_positions:
+			x, y = self.convert_position(pos)
+			self.player_positions.append((x, y))
+			player_id += 1
 
-	def set_wall(self, pos: str, wall_orientation: WallType):
-		pos = pos.upper()
-		if not self.__validate_put_wall(pos, wall_orientation):
-			return False
-		x, y = self.__get_wall_cell_coord(pos)
-		if wall_orientation == WallType.HORIZONTAL:
-			for i in [1, 2, 3, 5, 6, 7]:
-				self.map[x][y + i] = WALL_HORIZONTAL_CHAR
-			if not self.__has_way_out():
-				for i in [1, 2, 3, 5, 6, 7]:
-					self.map[x][y + i] = ORIGINAL_HORIZONTAL_WALL[i - 1 if i <= 3 else i - 5]
-				return False
-			return True
-		# vertical case
-		self.map[x + 1][y] = self.map[x + 3][y] = WALL_VERTICAL_CHAR
-		if not self.__has_way_out():
-			self.map[x + 1][y] = self.map[x + 3][y] = ORIGINAL_VERTICAL_WALL
-			return False
-		return True
-
-	def __validate_put_wall(self, pos: str, wall_orientation: WallType):
-		if not self.__is_valid_position(pos):
-			return False
-		x, y = self.__get_wall_cell_coord(pos)
-		if wall_orientation == WallType.HORIZONTAL:
-			if self.map[x][y + 1] == WALL_HORIZONTAL_CHAR or self.map[x][y + 5] == WALL_HORIZONTAL_CHAR:
-				return False
-		# vertical case
-		elif self.map[x + 1][y] == WALL_VERTICAL_CHAR or self.map[x + 3][y] == WALL_VERTICAL_CHAR:
-			return False
-		return True
-
-	def __is_valid_position(self, pos: str, collision: bool = False):
-		x, y = self.__get_int_coords(pos)
-		ok = x in self.valid_positions and (y + 1) in self.valid_positions
+	def set_wall(self, pos: str, wall_type: WallType):
+		x, y = self.convert_position(pos)
+		if wall_type == WallType.HORIZONTAL:
+			if y == 8:
+				raise ValueError('Coordenada fora dos limites do mapa')
+			if self.h_walls[x][y] or self.h_walls[x][y + 1]:
+				raise ValueError('Essa posição já tem uma barreira')
+			self.h_walls[x][y] = self.h_walls[x][y + 1] = True
+		else:
+			if x == 8:
+				raise ValueError('Coordenada fora dos limites do mapa')
+			if self.v_walls[x][y] or self.v_walls[x + 1][y]:
+				raise ValueError('Essa posição já tem uma barreira')
+			self.v_walls[x][y] = self.v_walls[x + 1][y] = True
+		ok, player_id = self.__has_way_out()
 		if not ok:
-			return False
-		if collision:
-			x, y = self.__get_cell_coord(pos)
-			return self.map[x][x] == EMPTY_POSITION
+			if wall_type == WallType.HORIZONTAL:
+				self.h_walls[x][y] = self.h_walls[x][y + 1] = False
+			else:
+				self.v_walls[x][y] = self.v_walls[x + 1][y] = False
+			raise ValueError(
+				f'Colocar barreira {wall_type.value} em {pos} '
+				f'deixa o jogador {player_id + 1} sem saída'
+			)
 		return True
-
-	def __validate_move_player(self, player: int, new_pos: str):
-		# TODO: verificar colisão; movimento duplo e diagonal
-		x_destiny, y_destiny = self.__get_int_coords(new_pos) 
-		old_pos = self.player_positions[player - 1]
-		x, y = self.__get_int_coords(old_pos)
-		diff_x = abs(x_destiny - x)
-		diff_y = abs(y_destiny - y)
-		if diff_x > 1 or diff_y > 1 or diff_x == diff_y:
-			return False
-		x, y = self.__get_cell_coord(new_pos)
-		if self.map[x][y] != EMPTY_POSITION: # colisão
-			return False
-		return self.__validade_move_on_wall(old_pos, new_pos)
-
-	def __validade_move_on_wall(self, oldPos: str, newPos: str):
-		x_destiny, y_destiny = self.__get_int_coords(newPos)
-		x, y = self.__get_int_coords(oldPos)
-		if x_destiny > x:
-			x_wall, y_wall = self.__get_wall_cell_coord(newPos)
-			return self.map[x_wall][y_wall + 1] != WALL_HORIZONTAL_CHAR
-		if x_destiny < x:
-			x_wall, y_wall = self.__get_wall_cell_coord(oldPos)
-			return self.map[x_wall][y_wall + 1] != WALL_HORIZONTAL_CHAR
-		if y_destiny > y:
-			x_wall, y_wall = self.__get_wall_cell_coord(newPos)
-			return self.map[x_wall + 1][y_wall] != WALL_VERTICAL_CHAR
-		if y_destiny < y:
-			x_wall, y_wall = self.__get_wall_cell_coord(oldPos)
-			return self.map[x_wall + 1][y_wall] != WALL_VERTICAL_CHAR
-		return False
-
-	def __get_int_coords(self, pos: str):
-		return (int(pos[0]), ord(pos[1]) - ord('A'))
 
 	def __has_way_out(self):
 		for i in range(len(self.player_positions)):
-			self.visited_cells = []
-			res = self.__dfs(self.player_positions[i], self.player_targets[i])
-			if not res:
-				return False
-		return True
+			self.__visited_positions_dfs = []
+			x, y = self.player_positions[i]
+			ret = self.__dfs((x, y), self.player_targets[i])
+			if not ret:
+				return (False, i)
+		return (True, 0)
 
-	def __dfs(self, pos: str, final_line: str):
-		# TODO: testar 
-		if final_line in pos:
+	def __dfs(self, pos: Point, target: str):
+		x, y = pos
+		if target.isdigit() and x + 1 == int(target):
 			return True
-		self.visited_cells.append(pos)
-		x, y = self.__get_int_coords(pos)
-		adj_cells: list[str] = []
-		if x > 1:
-			adj_cells.append(f'{x - 1}{pos[1]}')
-		if x < MAP_UPPER_BOUNDARY:
-			adj_cells.append(f'{x + 1}{pos[1]}')
-		if y > 0:
-			adj_cells.append(f'{x}{chr(ord(pos[1]) - 1)}')
-		if y < MAP_UPPER_BOUNDARY - 1:
-			adj_cells.append(f'{x}{chr(ord(pos[1]) + 1)}')
-		for cell in adj_cells:
-			if cell not in self.visited_cells and self.__validade_move_on_wall(pos, cell):
-				ret = self.__dfs(cell, final_line)
+		elif not target.isdigit() and chr(ord('A') + y) == target:
+			return True
+		self.__visited_positions_dfs.append((x, y))
+		adj_positions = self.get_adj_positions(pos)
+		for adj_pos in adj_positions:
+			if adj_pos not in self.__visited_positions_dfs:
+				ret = self.__dfs(adj_pos, target)
 				if ret:
 					return True
 		return False
 
-	def move_player(self, player: int, new_pos: str):
-		new_pos = new_pos.upper()
-		old_pos = self.player_positions[player - 1]
-		if not self.__is_valid_position(new_pos, True):
-			return False
-		if (
-			not self.__special_move_player(old_pos, new_pos) and
-			not self.__validate_move_player(player, new_pos)
-		):
-			return False
-		x, y = self.__get_cell_coord(old_pos)
-		self.map[x][y] = EMPTY_POSITION
-		x, y = self.__get_cell_coord(new_pos)
-		self.map[x][y] = COLOR_PAWNS[player - 1]
-		self.player_positions[player - 1] = new_pos
+	def get_adj_positions(self, pos: Point):
+		x, y = pos
+		adj_positions: list[Point] = []
+		if x > 0 and not self.h_walls[x][y]:
+			adj_positions.append((x - 1, y))
+		if x < MAP_SIZE - 1 and not self.h_walls[x + 1][y]:
+			adj_positions.append((x + 1, y))
+		if y > 0 and not self.v_walls[x][y]:
+			adj_positions.append((x, y - 1))
+		if y < MAP_SIZE - 1 and not self.v_walls[x][y + 1]:
+			adj_positions.append((x, y + 1))
+		return adj_positions
+
+	def move_pawn(self, player_id: int, pos: str):
+		new_x, new_y = self.convert_position(pos)
+		current_x, current_y = self.player_positions[player_id - 1]
+		if (new_x, new_y) in self.player_positions:
+			raise ValueError('A posição de destino deve estar vazia')
+		manhatan_distance = abs(new_x - current_x) + abs(new_y - current_y)
+		if manhatan_distance == 2:
+			return self.__double_jump(player_id, pos)
+		if manhatan_distance != 1:
+			raise ValueError('Movimento inválido')
+		adj_positions = self.get_adj_positions((current_x, current_y))
+		if not (new_x, new_y) in adj_positions:
+			raise ValueError('O peão não pode pular barreira')
+		self.player_positions[player_id - 1] = (new_x, new_y)
 		return True
 
-	def __special_move_player(self, old_pos: str, new_pos: str):
-		return (
-			self.__special_horizontal_move_player(old_pos, new_pos) or
-			self.__special_vertical_move_player(old_pos, new_pos)
-		)
+	def __double_jump(self, player_id: int, pos: str):
+		new_x, new_y = self.convert_position(pos)
+		current_x, current_y = self.player_positions[player_id - 1]
+		if abs(new_x - current_x) == 1:
+			ok = self.__diagonal_jump(current_x, current_y, new_x, new_y)
+		else:
+			ok = (
+				self.__v_double_jump(current_x, current_y, new_x) or
+				self.__h_double_jump(current_x, current_y, new_y)
+			)
+		if ok:
+			self.player_positions[player_id - 1] = (new_x, new_y)
+			return True
+		raise ValueError('Movimento duplo inválido')
 
-	def __special_vertical_move_player(self, old_pos: str, new_pos: str):
-		old_x, old_y = self.__get_int_coords(old_pos)
-		new_x, new_y = self.__get_int_coords(new_pos)
-		if old_y == new_y and new_x == old_x + 2:
-			print((old_pos, new_pos))
-			pos1 = f'{old_x + 1}{chr(old_y + ord('A'))}'
-			if self._special_v_horizontal_wall_mp(pos1, new_pos):
-				return True
-			return False
-		if old_y == new_y and new_x == old_x - 2:
-			pos2 = f'{old_x - 1}{chr(old_y + ord('A'))}'
-			if self._special_v_horizontal_wall_mp(old_pos, pos2):
-				return True
-			return False
+	def __v_double_jump(self, current_x: int, current_y: int, new_x: int):
+		if new_x == current_x + 2:
+			return (
+				(current_x + 1, current_y) in self.player_positions and
+				not self.h_walls[current_x + 1][current_y] and
+				not self.h_walls[current_x + 2][current_y]
+			)
+		if new_x == current_x - 2:
+			return (
+				(current_x - 1, current_y) in self.player_positions and
+				(
+					not self.h_walls[current_x][current_y] and
+					not self.h_walls[current_x - 1][current_y]
+				)
+			)
 		return False
 
-	def __special_horizontal_move_player(self, old_pos: str, new_pos: str):
-		old_x, old_y = self.__get_int_coords(old_pos)
-		new_x, new_y = self.__get_int_coords(new_pos)
-		if old_x == new_x and new_y == old_y + 2:
-			pos1 = f'{old_x}{chr(old_y + 1 + ord('A'))}'
-			if self.__special_h_vertical_wall_mp(pos1, new_pos):
-				return True
-			return False
-		if old_x == new_x and new_y == old_y - 2:
-			pos2 = f'{old_x}{chr(old_y - 1 + ord('A'))}'
-			if self.__special_h_vertical_wall_mp(old_pos, pos2):
-				return True
+	def __h_double_jump(self, current_x: int, current_y: int, new_y: int):
+		if new_y == current_y + 2:
+			return (
+				(current_x, current_y + 1) in self.player_positions and
+				not self.v_walls[current_x][current_y + 1] and
+				not self.v_walls[current_x][current_y + 2]
+			)
+		if new_y == current_y - 2:
+			return (
+				(current_x, current_y - 1) in self.player_positions and
+				not self.v_walls[current_x][current_y] and
+				not self.v_walls[current_x][current_y - 1]
+			)
 		return False
 
-	def __special_h_vertical_wall_mp(self, pos1: str, pos2: str):
-		x1, y1 = self.__get_wall_cell_coord(pos1)
-		x2, y2 = self.__get_wall_cell_coord(pos2)
-		return (
-			self.map[x1+1][y1] != WALL_VERTICAL_CHAR and
-			self.map[x2+1][y2] != WALL_VERTICAL_CHAR
+	def __diagonal_jump(self, current_x: int, current_y: int, new_x: int, new_y: int):
+		first_top_path, first_bottom_path, first_rigth_path, first_left_path = (
+			self._get_diagonal_first_paths(current_x, current_y, new_x, new_y)
 		)
+		if new_x == current_x + 1:
+			if new_y == current_y + 1: # inferior direito
+				if first_bottom_path and not self.v_walls[new_x][new_y]:
+					return True
+				if first_rigth_path and not self.h_walls[new_x][new_y]:
+					return True
+			else: # inferior esquerdo
+				if first_bottom_path and not self.v_walls[new_x][current_y]:
+					return True
+				if first_left_path and not self.h_walls[new_x][new_y]:
+					return True
+		else:
+			if new_y == current_y + 1: # superior direito
+				if first_top_path and not self.v_walls[new_x][new_y]:
+					return True
+				if first_rigth_path and not self.h_walls[current_x][new_y]:
+					return True
+			else: # superior esquerdo
+				if first_top_path and not self.v_walls[new_x][current_y]:
+					return  True
+				if first_left_path and not self.h_walls[current_x][new_y]:
+					return True
+		return False
 
-	def _special_v_horizontal_wall_mp(self, pos1: str, pos2: str):
-		x1, y1 = self.__get_wall_cell_coord(pos1)
-		x2, y2 = self.__get_wall_cell_coord(pos2)
-		return (
-			self.map[x1][y1+1] != WALL_HORIZONTAL_CHAR and
-			self.map[x2][y2+1] != WALL_HORIZONTAL_CHAR
-		)
-			
-	def set_players(self):
-		for i in range(len(self.player_positions)):
-			pos = self.player_positions[i]
-			x, y = self.__get_cell_coord(pos)
-			self.map[x][y] = COLOR_PAWNS[i]
+	def _get_diagonal_first_paths(self, current_x: int, current_y: int, new_x: int, new_y: int):
+		return [
+			# first_top_path
+			(
+				not self.h_walls[current_x][current_y] and
+				(new_x, current_y) in self.player_positions and
+				self.h_walls[new_x][current_y]
+				#TODO Não necessariamente precisa haver uma parede (pode ser um peão na proxima casa)
+			),
+			# first_bottom_path
+			(
+				not self.h_walls[new_x][current_y] and
+				(new_x, current_y) in self.player_positions and
+				self.h_walls[new_x + 1][current_y]
+			),
+			# first_rigth_path
+			(
+				not self.v_walls[current_x][new_y] and
+				(current_x, new_y) in self.player_positions and
+				self.v_walls[current_x][new_y + 1]
+			),
+			# first_left_path
+			(
+				not self.v_walls[current_x][current_y] and
+				(current_x, new_y) in self.player_positions and
+				self.v_walls[current_x][new_y]
+			)
+		]
 
 	def __str__(self) -> str:
-		strMap = ''
-		for line in self.map:
-			strMap += ''.join(line) + '\n'
-		return strMap
+		str_map = '\n    A   B   C   D   E   F   G   H   I\n'
+		for i in range(MAP_SIZE):
+			line = '  '
+			for j in range(MAP_SIZE):
+				wall = WALL_HORIZONTAL_CHAR if self.h_walls[i][j] else ORIGINAL_HORIZONTAL_WALL
+				line += f'+{wall}'
+			str_map += f'{line}+\n'
+			line = f'{i + 1} '
+			for j in range(MAP_SIZE):
+				wall = WALL_VERTICAL_CHAR if self.v_walls[i][j] else ORIGINAL_VERTICAL_WALL
+				char = ''
+				try:
+					idx = self.player_positions.index((i, j))
+					char = COLOR_PAWNS[idx]
+				except ValueError:
+					char = ' '
+				line += f'{wall} {char} '
+			str_map += f'{line}{WALL_VERTICAL_CHAR}\n'
+		str_map += '  +━━━+━━━+━━━+━━━+━━━+━━━+━━━+━━━+━━━+\n'
+		return str_map

@@ -79,10 +79,10 @@ class GameManager(Game):
 		self.current_client_id = next_player
 		return True
 
-	def move_pawn(self, client_id: int, pos: str):
+	def move_player(self, client_id: int, pos: str):
 		if (self.current_client_id != client_id):
 			return False
-		if not self.move_player(client_id, pos):
+		if not self.move_pawn(client_id, pos):
 			return False
 		next_player = client_id % self.n_players + 1
 		self.has_winner = self.player_targets[client_id - 1] in pos

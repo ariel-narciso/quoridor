@@ -3,9 +3,11 @@ from xmlrpc.client import Binary
 from typing import TypedDict, Required
 from enum import Enum
 
+type Point = tuple[int,int]
+
 class WallType(Enum):
-  VERTICAL = 'vertical'
-  HORIZONTAL = 'horizontal'
+	VERTICAL = 'vertical'
+	HORIZONTAL = 'horizontal'
 
 class EventType(Enum):
 	WAITING = 1
@@ -14,16 +16,16 @@ class EventType(Enum):
 	PAWN_MOVED = 4
 
 class GameNews(TypedDict, total=False):
-  event_type: Required[int]
-  player: int
-  position: str
-  orientation: str
-  message: str
-  board: Binary
-  next_player: int
-  winner: int
+	event_type: Required[int]
+	player: int
+	position: str
+	orientation: str
+	message: str
+	board: Binary
+	next_player: int
+	winner: int
 
 class GameState(TypedDict):
-  is_my_turn: bool
-  events: list[GameNews]
-  game_over: bool
+	is_my_turn: bool
+	events: list[GameNews]
+	game_over: bool
