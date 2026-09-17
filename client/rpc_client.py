@@ -76,7 +76,7 @@ def put_wall(server: ServerProxy, client_id: int):
 
 def move_pawn(server: ServerProxy, client_id: int):
   res = input('Informe a posição de destino: ')
-  success = server.move_pawn(client_id, res.upper())
+  success = server.move_player(client_id, res.upper())
   if not success:
     print('\nMovimento inválido\n')
     make_play(server, client_id)
