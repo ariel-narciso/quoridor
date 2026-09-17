@@ -1,5 +1,10 @@
 from core.board import (
   MAP_SIZE,
+  ORIGINAL_HORIZONTAL_WALL,
+  ORIGINAL_VERTICAL_WALL,
+  WALL_HORIZONTAL_CHAR,
+  WALL_VERTICAL_CHAR,
+  COLOR_PAWNS
 )
 
 from core.models import WallType, Point
@@ -211,3 +216,25 @@ class Game:
         self.v_walls[current_x][new_y]
       )
     ]
+
+  def __str__(self) -> str:
+    str_map = '\n    A   B   C   D   E   F   G   H   I\n'
+    for i in range(MAP_SIZE):
+      line = '  '
+      for j in range(MAP_SIZE):
+        wall = WALL_HORIZONTAL_CHAR if self.h_walls[i][j] else ORIGINAL_HORIZONTAL_WALL
+        line += f'+{wall}'
+      str_map += f'{line}+\n'
+      line = f'{i + 1} '
+      for j in range(MAP_SIZE):
+        wall = WALL_VERTICAL_CHAR if self.v_walls[i][j] else ORIGINAL_VERTICAL_WALL
+        char = ''
+        try:
+          idx = self.player_positions.index((i, j))
+          char = COLOR_PAWNS[idx]
+        except ValueError:
+          char = ' '
+        line += f'{wall} {char} '
+      str_map += f'{line}{WALL_VERTICAL_CHAR}\n'
+    str_map += '  +━━━+━━━+━━━+━━━+━━━+━━━+━━━+━━━+━━━+\n'
+    return str_map
