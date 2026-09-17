@@ -58,14 +58,18 @@ class GameManager(Game):
 	def get_n_walls(self, client_id: int):
 		return self.__n_walls[client_id - 1]
 
+	def __validate_turn(self, client_id: int):
+		if self.current_client_id != client_id:
+			raise ValueError(f'Não é a sua vez de jogar. É a vez do jogador {client_id}')
+
 	def put_wall(self, client_id: int, pos: str, orientation: str):
+		self.__validate_turn(client_id)
+		if self.__n_walls[client_id - 1] == 0:
+			raise ValueError(f'Você não tem mais barreiras disponíveis')
 		enum_orientation = WallType.HORIZONTAL
 		if orientation == WallType.VERTICAL.value:
 			enum_orientation = WallType.VERTICAL
-		if self.current_client_id != client_id or self.__n_walls[client_id - 1] == 0:
-			return False
-		if not self.set_wall(pos, enum_orientation):
-			return False
+		self.set_wall(pos, enum_orientation)
 		self.__n_walls[client_id - 1] -= 1
 		next_player = client_id % self.n_players + 1
 		self.broadcast_event({
@@ -77,13 +81,10 @@ class GameManager(Game):
 			'board': Binary(super().__str__().encode())
 		})
 		self.current_client_id = next_player
-		return True
 
 	def move_player(self, client_id: int, pos: str):
-		if (self.current_client_id != client_id):
-			return False
-		if not self.move_pawn(client_id, pos):
-			return False
+		self.__validate_turn(client_id)
+		self.move_pawn(client_id, pos)
 		next_player = client_id % self.n_players + 1
 		self.has_winner = self.player_targets[client_id - 1] in pos
 		event: GameNews = {
@@ -97,4 +98,3 @@ class GameManager(Game):
 			event['winner'] = client_id
 		self.broadcast_event(event)
 		self.current_client_id = next_player
-		return True
