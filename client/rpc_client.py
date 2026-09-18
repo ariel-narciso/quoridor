@@ -41,7 +41,7 @@ class RPCCLient:
 		self.n_walls = self.__get_n_walls()
 		try:
 			while True:
-				sleep(0.2)
+				sleep(1)
 				game_state = self.__get_game_state()
 				if not game_state:
 					continue
