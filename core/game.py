@@ -194,26 +194,38 @@ class Game:
 			(
 				not self.h_walls[current_x][current_y] and
 				(new_x, current_y) in self.player_positions and
-				self.h_walls[new_x][current_y]
+				(
+					self.h_walls[new_x][current_y] or
+					(new_x - 1, current_y) in self.player_positions
+				)
 				#TODO Não necessariamente precisa haver uma parede (pode ser um peão na proxima casa)
 			),
 			# first_bottom_path
 			(
 				not self.h_walls[new_x][current_y] and
 				(new_x, current_y) in self.player_positions and
-				self.h_walls[new_x + 1][current_y]
+				(
+					self.h_walls[new_x + 1][current_y] or
+					(new_x + 1, current_y) in self.player_positions
+				)
 			),
 			# first_rigth_path
 			(
 				not self.v_walls[current_x][new_y] and
 				(current_x, new_y) in self.player_positions and
-				self.v_walls[current_x][new_y + 1]
+				(
+					self.v_walls[current_x][new_y + 1] or
+					(current_x, new_y + 1) in self.player_positions
+				)
 			),
 			# first_left_path
 			(
 				not self.v_walls[current_x][current_y] and
 				(current_x, new_y) in self.player_positions and
-				self.v_walls[current_x][new_y]
+				(
+					self.v_walls[current_x][new_y] or
+					(current_x, new_y - 1) in self.player_positions
+				)
 			)
 		]
 
