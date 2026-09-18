@@ -7,7 +7,11 @@ def __main():
 		except ValueError:
 			print('Informe o host e a porta')
 			return
-		client = RPCCLient(host, int(port))
+		port = int(port)
+		protocol = 'http'
+		if port == 443:
+			protocol = 'https'
+		client = RPCCLient(protocol, host, port)
 		client.start()
 
 if __name__ == '__main__':

@@ -5,8 +5,8 @@ from core.models import EventType, GameState, WallType
 
 class RPCCLient:
 
-	def __init__(self, host: str = 'localhost', port: int = 8000) -> None:
-		uri = f'http://{host}:{port}'
+	def __init__(self, protocol: str, host: str = 'localhost', port: int = 8000) -> None:
+		uri = f'{protocol}://{host}:{port}'
 		self.__server = ServerProxy(uri)
 		self.client_id = -1
 		self.n_walls = 0
