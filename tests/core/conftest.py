@@ -1,28 +1,10 @@
 import pytest
 from core.game import Game, WallType
 
-"""
-		 A   B   C   D   E   F   G   H   I
-	 +━━━+━━━+━━━+━━━+━━━+━━━+━━━+━━━+━━━+
- 1 ┃   ┊   ┊   ┊   ┃ ● ┊   ┃   ┊   ┊   ┃
-	 + ┄ + ┄ + ┄ + ┄ + ┄ + ┄ + ┄ + ┄ + ┄ +
- 2 ┃   ┊   ┊   ┊   ┃   ┊   ┃   ┊   ┊   ┃
-	 + ┄ + ┄ + ┄ + ┄ + ┄ + ┄ + ┄ + ┄ + ┄ +
- 3 ┃   ┊   ┊   ┊   ┊   ┊   ┊   ┊   ┊   ┃
-	 + ┄ + ┄ + ┄ + ┄ + ┄ + ┄ + ┄ +━━━+━━━+
- 4 ┃   ┊   ┊   ┊   ┊   ┊   ┊   ┊   ┊   ┃
-	 +━━━+━━━+ ┄ + ┄ + ┄ + ┄ + ┄ + ┄ + ┄ +
- 5 ┃ ● ┊   ┊   ┊   ┊   ┊   ┊   ┊   ┊ ● ┃
-	 + ┄ + ┄ + ┄ + ┄ + ┄ + ┄ + ┄ +━━━+━━━+
- 6 ┃   ┊   ┊   ┊   ┊   ┊   ┊   ┊   ┊   ┃
-	 +━━━+━━━+ ┄ + ┄ + ┄ + ┄ + ┄ + ┄ + ┄ +
- 7 ┃   ┊   ┊   ┊   ┊   ┊   ┊   ┊   ┊   ┃
-	 + ┄ + ┄ + ┄ + ┄ + ┄ + ┄ + ┄ + ┄ + ┄ +
- 8 ┃   ┊   ┊   ┃   ┊   ┃   ┊   ┊   ┊   ┃
-	 + ┄ + ┄ + ┄ + ┄ + ┄ + ┄ + ┄ + ┄ + ┄ +
- 9 ┃   ┊   ┊   ┃   ┊ ● ┃   ┊   ┊   ┊   ┃
-	 +━━━+━━━+━━━+━━━+━━━+━━━+━━━+━━━+━━━+
-"""
+@pytest.fixture()
+def standard_scenario():
+	return Game(['5A', '1E', '5I', '9E'], ['I', '9', 'A', '1'])
+
 @pytest.fixture()
 def walls_scenario():
 	game = Game(['5A', '1E', '5I', '9E'], ['I', '9', 'A', '1'])
@@ -39,3 +21,15 @@ def walls_scenario():
 	assert game.set_wall('8D', WallType.VERTICAL)
 	assert game.set_wall('8F', WallType.VERTICAL)
 	return game
+
+@pytest.fixture
+def pawns_together_scenario():
+	return Game(['5E', '4E', '5F', '6E'], ['I', '9', 'A', '1'])
+
+@pytest.fixture()
+def pawns_together_with_walls_scenario(pawns_together_scenario: Game):
+	assert pawns_together_scenario.set_wall('4D', WallType.HORIZONTAL)
+	assert pawns_together_scenario.set_wall('4E', WallType.VERTICAL)
+	assert pawns_together_scenario.set_wall('5G', WallType.VERTICAL)
+	assert pawns_together_scenario.set_wall('7E', WallType.HORIZONTAL)
+	return pawns_together_scenario
