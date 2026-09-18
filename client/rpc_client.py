@@ -59,7 +59,7 @@ class RPCCLient:
 			'Tipo da barreira: 1 - Horizontal || 2 - Vertical\n'
 			'Formato da posição: {linha}{coluna}\n'
 			'Formato da jogada: {tipoJogada} {posicao} {tipoBarreira}.\n'
-			'Ex: 2 5C 1 - coloca uma barreira horizontal em 5C'
+			'Ex: 2 5C 1 - coloca uma barreira horizontal em 5C\n'
 			'Nota: ({tipoBarreira}) somente necessário se o tipo de '
 			'jogada for colocar uma barreira\n\n'
 			f'Você tem {self.n_walls} barreiras disponíveis\n'
